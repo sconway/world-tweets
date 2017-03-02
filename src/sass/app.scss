@@ -1,0 +1,396 @@
+$line-transition-time: 200ms;
+$slide-transition-time: 500ms;
+
+
+html {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  background-image: url("../images/bg-4.jpg");
+  background-repeat: no-repeat;
+  background-size: cover;
+  color: #fff;
+  font-family: 'Press Start 2P', cursive;
+	margin: 0;
+  height: 100%;
+  width:  100%;
+}
+
+// Contains our application
+#wrapper {
+  position: absolute;
+  margin: 0;
+  height: 100%;
+  width:  100%;
+  transition: transform $slide-transition-time ease-in-out;
+  &.active {
+    transform: translateX(20%);
+    .country__information {
+      opacity: 1;
+      .country--name{
+        opacity: 1;
+      }
+      .country__detail {
+        opacity: 1;
+        &:nth-of-type(1) {
+          transition: opacity 300ms ease-in-out $slide-transition-time+300;
+        }
+        &:nth-of-type(2) {
+          transition: opacity 300ms ease-in-out $slide-transition-time+600;
+        }
+        &:nth-of-type(3) {
+          transition: opacity 300ms ease-in-out $slide-transition-time+900;
+        }
+        &:nth-of-type(4) {
+          transition: opacity 300ms ease-in-out $slide-transition-time+1200;
+        }
+        &:nth-of-type(5) {
+          transition: opacity 300ms ease-in-out $slide-transition-time+1500;
+        }
+      }
+    }
+    .country--name {
+      opacity: 0;
+    }
+  }
+}
+
+// Container for the react portion
+#container {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+}
+
+// Contains the Three.js portion
+#three-container {
+  position: absolute;
+  margin: 0;
+  height: 100%;
+  width:  100%;
+}
+
+
+
+// ========================= Glitch Effect =======================
+.glitch{
+  overflow: hidden;
+  &::before, 
+  &::after {
+    background: transparent;
+    color: white;
+    content: attr(data-text);
+    position: absolute;
+    top: 2px;
+    transform: translateX(-50%);
+    overflow: hidden;
+    clip: rect(0,900px,0,0); 
+    height: 100%;
+    width: 100%;
+  }
+  &::before {
+    animation: noise-anim-2 5s infinite linear alternate-reverse;
+    left: calc(50%);
+    text-shadow: 1px 1px blue; 
+  }
+  &::after {
+    animation: noise-anim 4s infinite linear alternate-reverse;
+    left: calc(50%);
+    text-shadow: 1px 1px red;
+  }
+}
+
+
+@keyframes noise-anim {
+  $steps: 20;
+  @for $i from 0 through $steps{
+    #{percentage($i*(1/$steps))}{
+      clip:rect(random(50)+px,9999px,random(200)+px,0);
+    }
+  }
+}
+
+
+@keyframes noise-anim-2 {
+  $steps: 20;
+  @for $i from 0 through $steps{
+    #{percentage($i*(1/$steps))}{
+      clip:rect(random(50)+px,9999px,random(200)+px,0);
+    }
+  }
+}
+
+
+
+// ========================= Country Info =======================
+.country--name {
+  font-size: 86px;
+  letter-spacing: 3px;
+  line-height: 1.5;
+  opacity: 0;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  text-align: center;
+  text-transform: uppercase;
+  transform: translate(-50%, -50%);
+  transition: opacity 300ms ease-in-out;
+  width: 80%;
+  &.visible {
+    opacity: 1;
+  }
+}
+
+// Container for the country name and the
+// country details for each country.
+.country__information {
+  opacity: 0;
+  position: absolute;
+  left: -20%;
+  height: 100%;
+  width: 400px;
+  transition: opacity $slide-transition-time ease-in-out;
+  .country--name {
+    @extend .glitch;
+    font-size: 20px;
+    margin: 50px auto;
+    min-height: 30px;
+    position: relative;
+    left: auto;
+    top:  auto;
+    transform: none;
+    width: 100%;
+    white-space: inherit;
+    transition: all 300ms ease-in-out $slide-transition-time;
+  }
+}
+
+// Contains the various details about each
+// country (capital, population, etc.)
+.country__details {
+  padding: 20px;
+}
+
+// Individual detail
+.country__detail {
+  // font-family: 'Roboto',arial,sans-serif;
+  line-height: 1.5;
+  margin-bottom: 30px;
+  opacity: 0;
+  transition: opacity 300ms ease-in-out;
+  label {
+    // font-family: 'Press Start 2P', cursive;
+  }
+}
+
+.country__detail--languages {
+  word-break: break-all;
+}
+
+
+
+// ========================= Tweet Info =======================
+// Counter showing the total number of tweets that
+// have come in since the page loaded.
+.tweet-count {
+  position:  absolute;
+  right: 40px;
+  top: 10px;
+}
+
+// Box containing the information for the hovered
+// tweet (author image, name, and tweet text).
+.tweet-box {
+  position: absolute;
+  min-height: 100px;
+  width: 200px;
+  z-index: -1; 
+  &.visible {
+    z-index: 1; // allows the react portion to be in front of the THREE.js portion
+    .tweet-box--avatar,
+    .tweet-box--user-name,
+    .tweet-box--tweet-text {
+      transition: opacity 500ms ease-in-out $line-transition-time*2;
+      opacity: 1;
+    }
+  }
+  // When the cursor is in the top left screen quadrant.
+  &.top-left {
+    transform: translate(-131%, -75px);
+    .tweet-box--line {
+      &.top {
+        transform: rotate(180deg);
+        &::before {
+          transition: width $line-transition-time linear $line-transition-time;
+          width: 100%;
+        }
+      }
+      &.side {
+        left: calc(100% - 28px);
+        top: 61px;
+        transform: rotate(50deg);
+        &::before {
+          right: 0;
+          transition: width $line-transition-time linear;
+          width: 100%;
+        }
+      }
+    }
+  }
+  // When the cursor is in the top right screen quadrant.
+  &.top-right {
+    transform: translate(31%, -75px);
+    .tweet-box--line {
+      &.top {
+        &::before {
+          transition: width $line-transition-time linear $line-transition-time;
+          width: 100%;
+        }
+      }
+      &.side {
+        left: -40%;
+        transform: rotate(-50deg);
+        &::before {
+          transition: width $line-transition-time linear;
+          width: 100%;
+        }
+      }
+    }
+  }
+  // When the cursor is in the bottom left screen quadrant.
+  &.bottom-left {
+    transform: translate(-130%, calc(-100% + 75px));
+    .tweet-box--line {
+      &.top {
+        transform: rotate(180deg);
+        top: 100%;
+        &::before {
+          transition: width $line-transition-time linear $line-transition-time;
+          width: 100%;
+        }
+      }
+      &.side {
+        left: calc(100% - 28px);
+        // top: 61px;
+        top: calc(100% - 61px);
+        transform: rotate(-50deg);
+        &::before {
+          right: 0;
+          transition: width $line-transition-time linear;
+          width: 100%;
+        }
+      }
+    }
+  }
+  // When the cursor is in the bottom right screen quadrant.
+  &.bottom-right {
+    transform: translate(30%, calc(-100% + 75px));
+    .tweet-box--line {
+      &.top {
+        top: 100%;
+        &::before {
+          transition: width $line-transition-time linear $line-transition-time;
+          width: 100%;
+        }
+      }
+      &.side {
+        left: -40%;
+        top: 100%;
+        transform: rotate(50deg);
+        &::before {
+          transition: width $line-transition-time linear;
+          width: 100%;
+        }
+      }
+    }
+  }
+  .tweet-box--avatar,
+  .tweet-box--user-name,
+  .tweet-box--tweet-text {
+    opacity: 0;
+  }
+}
+
+
+// Decorative line originating from the point
+// that was hovered on. 
+.tweet-box--line {
+  background: transparent;
+  height: 1px;
+  position: absolute;
+  &::before{
+    background: #fff;
+    content: "";
+    position: absolute;
+    height: 1px;
+    width: 0;
+  }
+  &.top {
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  &.side {
+    transform-origin: right center;
+    transition: width $line-transition-time linear;
+    width: 40%;
+  }
+}
+
+
+.tweet-box--avatar {
+  width: 75px;
+}
+
+
+.tweet-box--tweet-text {
+  font-family: 'Roboto',arial,sans-serif
+}
+
+
+
+// ========================= Back Button =======================
+.back-btn {
+  opacity: 0;
+  position: absolute;
+  right: calc(20% - 35px);
+  top: 30px;
+  height: 15px;
+  width: 35px;
+  transition: all 100ms ease;
+  z-index: -1;
+  &:before {
+    border-left: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    content: "";
+    height: 15px;
+    width: 15px;
+    left: 2px;
+    position: absolute;
+    transform: rotate(45deg);
+  }
+  &::after {
+    background: #fff;
+    content: "";
+    height: 2px;
+    width: 100%;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  &:hover {
+    cursor: pointer;
+  }
+  &.visible {
+    opacity: 1;
+    transform: translateX(-65px);
+    transition: (opacity 325ms ease-in-out $slide-transition-time,
+               transform 500ms ease-in-out $slide-transition-time);
+    z-index: 1;
+  }
+}
+
+
+
