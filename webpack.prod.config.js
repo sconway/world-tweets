@@ -1,16 +1,12 @@
+// Configuration file for production builds.
+
 var webpack           = require('webpack'),
     path              = require('path'),
     autoprefixer      = require('autoprefixer'),
     ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 module.exports = {
-  entry: [
-    'webpack-dev-server/client?http://localhost:1243',
-    'webpack/hot/only-dev-server',
-    './src/js/index.js'
-  ],
-
-  devtool: 'source-map',
+  entry: './src/js/index.js';
 
   module: {
   	loaders: [
@@ -48,18 +44,23 @@ module.exports = {
   },
 
   plugins: [
-    new webpack.optimize.OccurrenceOrderPlugin(),
-    new webpack.HotModuleReplacementPlugin(),
-    new webpack.NoEmitOnErrorsPlugin(),
+    new webpack.optimize.DedupePlugin(),
+    new webpack.optimize.UglifyJsPlugin({
+      minimize: true,
+      compress: {
+        warnings: false
+      }
+    }),
+    new webpack.DefinePlugin({
+      'process.env': {
+        'NODE_ENV': JSON.stringify('production')
+      }
+    }),
     new ExtractTextPlugin('public/app.css')
   ],
 
-  // postcss: [ autoprefixer({ browsers: ['last 4 versions'] }) ],
-
   resolve: {
     extensions: [' ', '.js', '.jsx']
-  },
-
-  watch: true
+  }
 
 };

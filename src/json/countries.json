@@ -2677,6 +2677,19 @@
         "areaInSqKm": "637657.0",
         "languages": "so-SO,ar-SO,it,en-SO"
     },
+    "Somaliland": {
+        "countryCode": "SO",
+        "countryName": "Somalia",
+        "currencyCode": "SOS",
+        "population": "4500000",
+        "north": "11.979166",
+        "south": "-1.674868",
+        "east": "51.412636",
+        "west": "40.986595",
+        "capital": "Hargeisa",
+        "areaInSqKm": "748657.0",
+        "languages": "so-SO,ar-SO,it,en-SO"
+    },
     "Suriname": {
         "countryCode": "SR",
         "countryName": "Suriname",

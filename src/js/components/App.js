@@ -1,5 +1,9 @@
 import React, { Component }                         from 'react';
-import ReactDOM                                     from 'react-dom'
+import ReactDOM                                     from 'react-dom';
+import { bindActionCreators }                       from 'redux';
+import { connect }                                  from 'react-redux';
+import * as Actions                                 from '../actions';
+
 import { scene, camera, renderer}                   from '../common/scene';
 import { setEvents }                                from '../common/setEvents';
 import { convertToXYZ, getEventCenter, geodecoder } from '../common/geoHelpers';
@@ -19,52 +23,41 @@ import BackButton                                   from '../components/BackButt
 import TweetBox                                     from '../components/TweetBox';
 import TweetCount                                   from '../components/TweetCount';
 
-let OrbitControls     = require('three-orbit-controls')(THREE),
-    io                = require('socket.io-client'),
-    TWEEN             = require('tween.js'),
-    geo, controls, countries, overlay, textureCache, 
-    earth, cloud,
-    root      = new THREE.Object3D(),
-    points    = new THREE.Object3D(),
-    clock     = new THREE.Clock();
-
-const segments = 200, // number of vertices. Higher = better mouse accuracy
-      RADIUS   = 400;
 
 export var tweets = [];
 
-export default class App extends Component {
+
+class App extends Component {
   constructor(props) {
     super(props);
 
-    this.state = {
-      countryName: "",
-      countryFlag: "us",
-      countryCapital: "",
-      countryPopulation: "",
-      countrySize: "",
-      countryLanguages: "",
-      numTweets: 0,
-      numCountryTweets: 0,
-      isPointHovered: false,
-      isCountryClicked: false,
-      tweetImage: "src/images/clouds.png",
-      tweetName: "",
-      tweetText: ""
-    }
-
-    this.timer  = null;
-    this.socket = null;
-    this.globeMutex = true;
-    this.countryData = null;
-    this.sphere = new THREE.SphereGeometry(RADIUS, segments, segments); 
-    this.mouseCoordinates  = {x: 0, y: 0};  
-    this.lastPoint         = {};
-    this.animate           = this.animate.bind(this);
-    this.initFeed          = this.initFeed.bind(this);
-    this.onGlobeClick      = this.onGlobeClick.bind(this);
-    this.onGlobeMouseDown      = this.onGlobeMouseDown.bind(this);
-    this.onGlobeMousemove  = this.onGlobeMousemove.bind(this);
+    this.OrbitControls    = require('three-orbit-controls')(THREE);
+    this.io               = require('socket.io-client');
+    this.TWEEN            = require('tween.js');
+    this.geo              = null;
+    this.controls         = null;
+    this.countries        = null;
+    this.overlay          = null;
+    this.textureCache     = null;
+    this.earth            = null;
+    this.cloud            = null;
+    this.timer            = null;
+    this.socket           = null;
+    this.globeMutex       = true;
+    this.countryData      = null;
+    this.segments         = 200; // number of vertices. Higher = better mouse accuracy
+    this.RADIUS           = 400;
+    this.root             = new THREE.Object3D();
+    this.points           = new THREE.Object3D();
+    this.clock            = new THREE.Clock();
+    this.sphere           = new THREE.SphereGeometry(this.RADIUS, this.segments, this.segments);
+    this.mouseCoordinates = {x: 0, y: 0};  
+    this.lastPoint        = {};
+    this.animate          = this.animate.bind(this);
+    this.initFeed         = this.initFeed.bind(this);
+    this.onGlobeClick     = this.onGlobeClick.bind(this);
+    this.onGlobeMouseDown = this.onGlobeMouseDown.bind(this);
+    this.onGlobeMousemove = this.onGlobeMousemove.bind(this);
   }
 
 
@@ -82,26 +75,30 @@ export default class App extends Component {
    * is sent over to create the map points, text display, etc..
    */
   initFeed() {
-    let self   = this;
+    let self = this;
 
-    this.socket = io.connect();
+    this.socket = this.io.connect();
 
-    // when a new tweet comes in, add it to our array
-    this.socket.on('tweet', (data) => {
+    this.socket.on("connect", () => {
 
-      if (!self.state.isCountryClicked) {
-        tweets.push(data);
-      } else {
-        self.setState({ numCountryTweets: self.state.numCountryTweets + 1 });
-      }
+      // when a new tweet comes in, add it to our array
+      this.socket.on("tweet", (data) => {
+
+        if (!self.props.isCountryClicked) {
+          tweets.push(data);
+        } else {
+          self.props.actions.incrementCountryTweets()
+        }
+
+      });
+
+      // add the group of points to the root object so it will rotate with the globe.
+      this.root.add(this.points);
+
+      // add the latest tweet to the globe every so often.
+      this.timer = setInterval(self.addTweet.bind(self), 500);
 
     });
-
-    // add the group of points to the root object so it will rotate with the globe.
-    root.add(points);
-
-    // add the latest tweet to the globe every so often.
-    this.timer = setInterval(self.addTweet.bind(self), 500);
   }
 
 
@@ -111,8 +108,8 @@ export default class App extends Component {
    */
   addTweet() {
     // Make sure we have some tweets to work with, and a country isn't in view.
-    if (tweets[this.state.numTweets] && !this.state.isCountryClicked) {
-      let tweet       = tweets[this.state.numTweets],
+    if (tweets[this.props.numTweets] && !this.props.isCountryClicked) {
+      let tweet       = tweets[this.props.numTweets],
           tweetId     = tweet['twid'],
           text        = tweet['body'],
           coordinates = tweet['coordinates']['coordinates'],
@@ -121,14 +118,14 @@ export default class App extends Component {
           sentiment   = tweet['sentiment'],
           color       = getColor(sentiment.score);
 
-      this.setState({ numTweets: this.state.numTweets + 1 });
+      this.props.actions.incrementTweets();
 
       // create the point and add it to our list group of points
-      createPoint(coordinates[1], coordinates[0], RADIUS, 10, 20, color, points, TWEEN);
+      createPoint(coordinates[1], coordinates[0], this.RADIUS, 10, 20, color, this.points, this.TWEEN);
 
       // if there are enough tweets, move the oldest one off
-      if (this.state.numTweets > 50) 
-        points.children.shift();
+      if (this.props.numTweets > 50) 
+        this.points.children.shift();
     }
   }
 
@@ -138,26 +135,26 @@ export default class App extends Component {
 	 */
 	loadMap() {
 
-    root.scale.set(0.1, 0.1, 0.1);
+    this.root.scale.set(0.1, 0.1, 0.1);
 
     let self  = this,
-        globe = createEarth(this.sphere, root, TWEEN, this.initFeed);
+        globe = createEarth(this.sphere, this.root, this.TWEEN, this.initFeed);
 
-	  d3.json('src/json/world.json', function (err, data) {
+	  d3.json('src/json/world.json', (err, data) => {
 
       // Setup cache for country textures
-      countries   = topojson.feature(data, data.objects.countries);
-      geo         = geodecoder(countries.features);
-      earth       = globe.earth;
-      cloud       = globe.cloud;
+      this.countries = topojson.feature(data, data.objects.countries);
+      this.geo       = geodecoder(this.countries.features);
+      this.earth     = globe.earth;
+      this.cloud     = globe.cloud;
 
-      textureCache = memoize(function (cntryID, color) {
-        let country = geo.find(cntryID);
+      this.textureCache = memoize((cntryID, color) => {
+        let country = this.geo.find(cntryID);
         return mapTexture(country, color);
       });
 
-	    let worldTexture     = mapTexture(countries, '#transparent', 'transparent'),
-	        worldTextureBack = mapTexture(countries, '#000',         'transparent');
+	    let worldTexture     = mapTexture(this.countries, '#transparent', 'transparent'),
+	        worldTextureBack = mapTexture(this.countries, '#000',         'transparent');
 
 	    let mapMaterialBack  = new THREE.MeshPhongMaterial({
 	      depthWrite:  false,
@@ -166,7 +163,7 @@ export default class App extends Component {
 	      transparent: true,
 	    });
 
-	    let mapMaterialFront  = new THREE.MeshPhongMaterial({
+	    let mapMaterialFront = new THREE.MeshPhongMaterial({
 	      depthWrite:  false,
 	      map:         worldTexture,
 	      opacity:     0.6,
@@ -176,42 +173,40 @@ export default class App extends Component {
 	    let baseMapBack  = new THREE.Mesh(self.sphere, mapMaterialBack),
 	        baseMapFront = new THREE.Mesh(self.sphere, mapMaterialFront);
 
-      baseMapFront.addEventListener('mousedown',   self.onGlobeMouseDown,     false);
+      baseMapFront.addEventListener('mousedown', self.onGlobeMouseDown, false);
       baseMapFront.addEventListener('mouseup',   self.onGlobeClick,     false);
       baseMapFront.addEventListener('mousemove', self.onGlobeMousemove, false);
 	    baseMapFront.receiveShadow = true;
       baseMapFront.name = "front-map";
       baseMapBack.name  = "back-map";
-	    // baseMapBack.rotation.y     = Math.PI;
-	    // baseMapFront.rotation.y    = Math.PI;
 
       // set the earth image to be above the colored globe
-      earth.renderOrder = 1;
+      this.earth.renderOrder = 1;
 
-      root.rotation.y = Math.PI;
+      this.root.rotation.y = Math.PI;
 
 	    // make sure the back is added to the root/scene first
-      root.add(earth);
-      root.add(cloud);
-	    root.add(baseMapBack);
-	    root.add(baseMapFront);
+      this.root.add(this.earth);
+      this.root.add(this.cloud);
+	    this.root.add(baseMapBack);
+	    this.root.add(baseMapFront);
 
-	    scene.add(root);
+	    scene.add(this.root);
 
-	    controls = new OrbitControls( camera, renderer.domElement );
+	    this.controls = new this.OrbitControls(camera, renderer.domElement);
 
       // Setup the event listeners for the events on the globe.
       setEvents(camera, [baseMapFront], 'mousedown', null);
 	    setEvents(camera, [baseMapFront], 'mouseup',   null);
       setEvents(camera, [baseMapFront], 'mousemove', 10, null, null,
         self.onCountryHoverOff.bind(self));
-	    setEvents(camera, points.children, 'mousemove', 5, TWEEN,
+	    setEvents(camera, this.points.children, 'mousemove', 5, this.TWEEN,
         self.onPointHover.bind(self), self.onPointHoverOff.bind(self));
 
 	  });
 
     // Load in the country data for later..
-    d3.json('src/json/countries.json', function(err, data) {
+    d3.json('src/json/countries.json', (err, data) => {
       if (err) throw err;
 
       self.countryData = data;
@@ -227,25 +222,27 @@ export default class App extends Component {
    *
    */
   setCountryData(country) {
-    let countryInfo = this.countryData[country];
+    let countryInfo = this.countryData[country],
+        countryData = {
+          flag:       countryInfo["countryCode"].toLowerCase(),
+          capital:    countryInfo["capital"],
+          population: countryInfo["population"],
+          size:       countryInfo["areaInSqKm"],
+          languages:  countryInfo["languages"]
+        };
 
+    // Show the selected country's flag
     this.setCountryImage(countryInfo["countryCode"].toLowerCase());
     
     // Let the server know a country was clicked.
     this.socket.emit("countryChange", countryInfo );
 
-    this.setState({
-      countryFlag:       countryInfo["countryCode"].toLowerCase(),
-      countryCapital:    countryInfo["capital"],
-      countryPopulation: countryInfo["population"],
-      countrySize:       countryInfo["areaInSqKm"],
-      countryLanguages:  countryInfo["languages"]
-    });
+    this.props.actions.setCountryData(countryData);
   }
 
 
   /**
-   * Sets the globe material to the flag of the clicked country.
+   * Sets the cloud material to the flag of the clicked country.
    *
    * @param     countryCode     :     String
    *
@@ -260,6 +257,9 @@ export default class App extends Component {
   }
 
 
+  /**
+   * Set the cloud material back to the cloud image.
+   */
   setCountryImageBack() {
     let loader = new THREE.TextureLoader();
 
@@ -278,18 +278,21 @@ export default class App extends Component {
    */
   onPointHover(obj, mouse) {
     let index = pointList.indexOf(obj),
-        tweet = tweets[index];
+        tweet = tweets[index],
+        data  = {
+          image: tweet["avatar"],
+          name:  tweet["author"],
+          text:  tweet["body"]
+        };
 
     this.mouseCoordinates = mouse;
 
     // Don't show the tweets when we're in the country view mode.
-    if (!this.state.isCountryClicked) {
-      this.setState({ 
-        isPointHovered:   true,
-        tweetImage:       tweet["avatar"],
-        tweetName:        tweet["author"],
-        tweetText:        tweet["body"]
-      }, this.onCountryHoverOff()); 
+    if (!this.props.isCountryClicked) {
+      this.props.actions.setPointHovered(true);
+      this.props.actions.setPointTweetData(data);
+      this.toggleGlobeVisibility(0, 0.6, 0.4);
+      this.onCountryHoverOff();
     }
   }
 
@@ -299,7 +302,9 @@ export default class App extends Component {
    * material back to what it was before.
    */
   onPointHoverOff() {
-    this.setState({ isPointHovered: false });
+    this.props.actions.setPointHovered(false);
+
+    this.toggleGlobeVisibility(0, 0.99, 200);
   }
 
 
@@ -311,34 +316,32 @@ export default class App extends Component {
    *
    */
   onCountryClick(country) {
-    root.remove(points);
+    this.root.remove(this.points);
 
     // Set the styles back to the default state.
     document.getElementById("wrapper").classList = "active";
-    document.body.style.cursor = "auto";
+    document.body.style.cursor                   = "auto";
 
-    this.setState({
-      isPointHovered: false,
-      isCountryClicked: true,
-      countryName: country
-    }, this.setCountryData(country) );
+    this.props.actions.setPointHovered(false);
+    this.props.actions.setCountryClicked(true);
+    this.props.actions.setCountryName(country);
+    this.setCountryData(country);
   }
 
 
   /**
    * Handles the act of hovering on a country. Sets that country's name
    * and updates the material to show it.
+   *
+   * @param      country     :     Number
+   *
    */
   onCountryHover(country) {
     document.body.style.cursor = "pointer";
 
-    this.setState({ countryName: country });
+    this.props.actions.setCountryName(country)
 
-    if (scene.getObjectByName('earth').material.opacity > 0.6) {
-      overlay.material.opacity = 1;
-      fadeObject(TWEEN, scene.getObjectByName('earth'), 0.6, 200);
-      fadeObject(TWEEN, scene.getObjectByName('back-map'), 0.4, 200);
-    }
+    this.toggleGlobeVisibility(1, 0.6, 0.4);
   }
 
 
@@ -346,17 +349,13 @@ export default class App extends Component {
    * Handles hovering off a country. Sets the materials back.
    */
   onCountryHoverOff() {
-    if (!this.state.isCountryClicked) {
-      console.log("hovered off country");
+    if (!this.props.isCountryClicked) {
       document.body.style.cursor = "auto";
 
-      this.setState({ countryName: "" });
+      this.props.actions.setCountryName("");
 
-      if (scene.getObjectByName('earth').material.opacity < 0.99) {
-        overlay.material.opacity = 0;
-        fadeObject(TWEEN, scene.getObjectByName('earth'), 0.99, 200);
-        fadeObject(TWEEN, scene.getObjectByName('back-map'), 1, 200);
-      }
+      if (!this.props.isPointHovered)
+        this.toggleGlobeVisibility(0, 0.99, 200);
     }
   }
 
@@ -366,7 +365,7 @@ export default class App extends Component {
    * to reset the state to its original settings.
    */
   onBackButtonClick() {
-    root.add(points);
+    this.root.add(this.points);
 
     document.getElementById("wrapper").classList = "";
 
@@ -376,12 +375,29 @@ export default class App extends Component {
     // Let the server know a country was clicked.
     this.socket.emit("countryChangeBack");
 
-    this.setState({ 
-      isCountryClicked: false,
-      countryName:      "",
-      numCountryTweets: 0
-    });
+    this.props.actions.setCountryClicked(false);
+    this.props.actions.setCountryName("");
+    this.props.actions.resetCountryTweets();
   }
+
+
+  /**
+   * Used to decrease/increase the earth and back map's opacity depending 
+   * on whether or not a country is hovered on.
+   *
+   * @param      materialOpacity     :     number
+   * @param      earthOpacity        :     number
+   * @param      mapOpacity          :     number
+   *
+   */
+  toggleGlobeVisibility(materialOpacity, earthOpacity, mapOpacity) {
+    if (scene.getObjectByName('earth').material.opacity !== earthOpacity) {
+      if (this.overlay) this.overlay.material.opacity = materialOpacity;
+
+      fadeObject(this.TWEEN, scene.getObjectByName('earth'),    earthOpacity, 200);
+      fadeObject(this.TWEEN, scene.getObjectByName('back-map'), mapOpacity,   200);
+    }
+  }  
 
 
   /**
@@ -415,20 +431,19 @@ export default class App extends Component {
 	onGlobeClick(event) {
 	  // Get point, convert to latitude/longitude
 	  let latlng   = getEventCenter.call(this.sphere, event),
-        country  = geo.search(latlng[0], latlng[1]),
+        country  = this.geo.search(latlng[0], latlng[1]),
         isStatic = this.isStaticClick(event);
 
     // Don't do anything when a country or point is in view, or if a drag occurred.
-    if (!this.state.isCountryClicked && !this.state.isPointHovered && isStatic) {
+    if (!this.props.isCountryClicked && !this.props.isPointHovered && isStatic) {
       // Make sure a country is clicked on
-      if (country) {
+      if (country)
         this.onCountryClick(country.code);
-      }
 
   	  // Get new camera position
   	  let temp = new THREE.Mesh();
   	  temp.position.copy(convertToXYZ(latlng, 900));
-  	  temp.lookAt(root.position);
+  	  temp.lookAt(this.root.position);
   	  temp.rotateY(Math.PI);
 
       // Computes the temporary rotation needed to get the country in view
@@ -449,7 +464,7 @@ export default class App extends Component {
       d3.timer(tweenRot);
 
       // Set the earth's rotation back to 0 so the correct country is in view.
-      let tweenRootRot = getTween.call(root, 'rotation', new THREE.Euler(0, Math.PI, 0));
+      let tweenRootRot = getTween.call(this.root, 'rotation', new THREE.Euler(0, Math.PI, 0));
       d3.timer(tweenRootRot);
     }
 	}
@@ -458,22 +473,25 @@ export default class App extends Component {
 	/**
 	 * Creates and overlays a map with the hovered country highlighted.
 	 * Called when the map/globe is hovered on.
+   *
+   * @param     event     :     Object
+   *
 	 */
 	onGlobeMousemove(event) {
 	  let map, material,
 	      latlng  = getEventCenter.call(this.sphere, event),
-	      country = geo.search(latlng[0], latlng[1]);
+	      country = this.geo.search(latlng[0], latlng[1]);
 
     // Make sure a country, is hovered on and we are not in the country view.
-	  if (country && !this.state.isCountryClicked && !this.state.isPointHovered) {
+	  if (country && !this.props.isCountryClicked && !this.props.isPointHovered) {
 
       // Only run this if we have the mutex or we moved to a different country.
-      if (country.code !== this.state.countryName || this.globeMutex) {
+      if (country.code !== this.props.countryName || this.globeMutex) {
 
         this.globeMutex = false;
 
         // Overlay the selected country
-        map = textureCache(country.code, 'rgba(0,0,0,0.9)');
+        map = this.textureCache(country.code, 'rgba(0,0,0,0.9)');
 
         material = new THREE.MeshPhongMaterial({
           depthWrite:  false,
@@ -482,13 +500,13 @@ export default class App extends Component {
         });
 
         // Only add the overlay if it's not there already. Duh..
-        if (!overlay) {
-          overlay = new THREE.Mesh(this.sphere, material);
-          overlay.renderOrder = 2;
-          overlay.name = "overlay";
-          root.add(overlay);
+        if (!this.overlay) {
+          this.overlay = new THREE.Mesh(this.sphere, material);
+          this.overlay.renderOrder = 2;
+          this.overlay.name = "overlay";
+          this.root.add(this.overlay);
         } else {
-          overlay.material = material;
+          this.overlay.material = material;
         }
 
         this.onCountryHover(country.code);
@@ -497,9 +515,10 @@ export default class App extends Component {
 
 	  } else {
 
+      // Only call this once
       if (!this.globeMutex) {
         this.globeMutex = true;
-        // Set the pointer back if we aren't on a country
+
         this.onCountryHoverOff();
       }
 
@@ -523,17 +542,17 @@ export default class App extends Component {
    * values that are used for animation or control.
    */ 
   update() {
-    if (controls && !this.state.isPointHovered) 
-      controls.update();
+    if (this.controls && !this.props.isPointHovered) 
+      this.controls.update();
 
-    if (cloud && !this.state.isPointHovered) 
-      cloud.rotation.y += 0.000625;
+    if (this.cloud && !this.props.isPointHovered) 
+      this.cloud.rotation.y += 0.000625;
 
-    if (root && !this.state.isPointHovered && !this.state.isCountryClicked)
-      root.rotation.y += 0.0005;
+    if (this.root && !this.props.isPointHovered && !this.props.isCountryClicked)
+      this.root.rotation.y += 0.0005;
 
     // update and transitions on existing tweens
-    TWEEN.update();
+    this.TWEEN.update();
   }
 
 
@@ -552,26 +571,64 @@ export default class App extends Component {
 		return (
       <main className="body">
         <BackButton 
-          isCountryClicked={this.state.isCountryClicked} 
+          isCountryClicked={this.props.isCountryClicked} 
           onButtonClick   ={this.onBackButtonClick.bind(this)} />
-        <CountryName  countryName={this.state.countryName} />
+        <CountryName  
+          countryName={this.props.countryName} />
   			<CountryInformation 
-          countryName      ={this.state.countryName} 
-          countryFlag      ={this.state.countryFlag}
-          countryCapital   ={this.state.countryCapital} 
-          countryPopulation={this.state.countryPopulation} 
-          countrySize      ={this.state.countrySize} 
-          countryLanguages ={this.state.countryLanguages}
-          numCountryTweets ={this.state.numCountryTweets} />
-        <TweetCount numTweets={this.state.numTweets} />
+          countryName      ={this.props.countryName} 
+          countryFlag      ={this.props.countryFlag}
+          countryCapital   ={this.props.countryCapital} 
+          countryPopulation={this.props.countryPopulation} 
+          countrySize      ={this.props.countrySize} 
+          countryLanguages ={this.props.countryLanguages}
+          numCountryTweets ={this.props.numCountryTweets} />
+        <TweetCount 
+          numTweets={this.props.numTweets} />
         <TweetBox 
-          isPointHovered  ={this.state.isPointHovered}
+          isPointHovered  ={this.props.isPointHovered}
           mouseCoordinates={this.mouseCoordinates}
-          image           ={this.state.tweetImage}
-          name            ={this.state.tweetName}
-          text            ={this.state.tweetText} />
+          image           ={this.props.tweetImage}
+          name            ={this.props.tweetName}
+          text            ={this.props.tweetText} />
       </main>
 		);
 	}
-
 }
+
+
+/**
+ * Maps state(result of our reducers) to the defined props.
+ * Allows this container to be aware of the store.
+ */
+const mapStateToProps = (state) => {
+  return {
+    countryName:       state.appReducer.countryName,
+    countryFlag:       state.appReducer.countryFlag,
+    countryCapital:    state.appReducer.countryCapital,
+    countryPopulation: state.appReducer.countryPopulation,
+    countrySize:       state.appReducer.countrySize,
+    countryLanguages:  state.appReducer.countryLanguages,
+    numTweets:         state.appReducer.numTweets,
+    numCountryTweets:  state.appReducer.numCountryTweets,
+    isPointHovered:    state.appReducer.isPointHovered,
+    isCountryClicked:  state.appReducer.isCountryClicked,
+    tweetImage:        state.appReducer.tweetImage,
+    tweetName:         state.appReducer.tweetName,
+    tweetText:         state.appReducer.tweetText
+  };
+}
+
+
+/**
+ * Allows this container to inform the store that it needs to be updated.
+ * Gives us access to the action creators via props.
+ */
+const mapDispatchToProps = (dispatch) => {
+  return {
+    actions: bindActionCreators(Actions, dispatch)
+  };
+}
+
+// Give child components access to these props.
+export default connect(mapStateToProps, mapDispatchToProps)(App);

@@ -7,7 +7,7 @@ var express = require('express'),
   path      = require('path'),
   config    = require('./config'),
   app       = express(),
-  port      = process.env.PORT || 1337,
+  port      = process.env.PORT || 1243,
   numTweets = 0,
   term;
 
@@ -45,7 +45,6 @@ app.get('/', function(req, res) {
  * Initializes the web socket and handlers.
  */
 const init = (term) => {
-
   // Initialize socket.io
   var sock = io.listen(server);
 
@@ -64,8 +63,7 @@ const init = (term) => {
     socket.on("countryChangeBack", () => {
       initStream(term, sock, null);
     });
-  });
-  
+  }); 
 }
 
 

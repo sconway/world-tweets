@@ -8,11 +8,10 @@ export function setEvents(camera, items, type, wait, tween,
                           onIntersection = null, onNoIntersection = null) {
 
   let raycaster        = new THREE.Raycaster(),
-    intersected        = false,
-    globeIntersected   = false,
-    hoveredObject      = null,
-    hoveredMaterial    = null;
-
+      intersected      = false,
+      globeIntersected = false,
+      hoveredObject    = null,
+      hoveredMaterial  = null;
 
   let listener = function(event) {
 
