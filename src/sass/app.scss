@@ -1,3 +1,5 @@
+@import "intro";
+
 $line-transition-time: 200ms;
 $slide-transition-time: 500ms;
 
@@ -8,9 +10,10 @@ html {
 }
 
 body {
-  background-image: url("../images/bg-4.jpg");
-  background-repeat: no-repeat;
-  background-size: cover;
+  background: #000;
+  // background-image: url("../images/bg-4.jpg");
+  // background-repeat: no-repeat;
+  // background-size: cover;
   color: #fff;
   font-family: 'Press Start 2P', cursive;
 	margin: 0;
@@ -150,7 +153,7 @@ body {
   position: absolute;
   left: -20%;
   height: 100%;
-  width: 400px;
+  width: 500px;
   transition: opacity $slide-transition-time ease-in-out;
   .country--name {
     @extend .glitch;
@@ -170,17 +173,24 @@ body {
 // Contains the various details about each
 // country (capital, population, etc.)
 .country__details {
-  padding: 20px;
+  padding: 20px 20px 20px 70px;
 }
 
 // Individual detail
 .country__detail {
   // font-family: 'Roboto',arial,sans-serif;
+  font-size: 20px;
+  letter-spacing: 3px;
   line-height: 1.5;
   margin-bottom: 30px;
   opacity: 0;
   transition: opacity 300ms ease-in-out;
   label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 6px;
+    margin-bottom: 7px;
+    text-transform: uppercase;
     // font-family: 'Press Start 2P', cursive;
   }
 }
@@ -196,8 +206,8 @@ body {
 // have come in since the page loaded.
 .tweet-count {
   position:  absolute;
-  right: 40px;
-  top: 10px;
+  right: 30px;
+  top: 20px;
 }
 
 // Box containing the information for the hovered

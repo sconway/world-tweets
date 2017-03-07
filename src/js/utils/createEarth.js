@@ -1,5 +1,4 @@
 import THREE from "THREE";
-import { growObject } from "../utils/tweens";
 
 /**
  * Creates and adds the earth to the scene.
@@ -8,14 +7,13 @@ import { growObject } from "../utils/tweens";
  * @param     callback : function
  *
  */
-export const createEarth = (shape, obj, tween, callback) => {
+export const createEarth = (shape) => {
   // loads the earth images and once it is done, expands it
   let loader       = new THREE.TextureLoader(),
       texture      = loader.load("src/images/earth.png"),
       bumpTexture  = loader.load("src/images/earthbump.jpg"),
       specTexture  = loader.load("src/images/earthspec.jpg"),
-      cloudTexture = loader.load("src/images/clouds.png", 
-                                  growObject(tween, obj, 1, 2000, 500, callback));
+      cloudTexture = loader.load("src/images/clouds.png");
 
   texture.wrapS      = texture.wrapT      = THREE.RepeatWrapping;
   bumpTexture.wrapS  = bumpTexture.wrapT  = THREE.RepeatWrapping;

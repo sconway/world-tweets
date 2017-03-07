@@ -24,10 +24,6 @@ export default class CountryDetails extends Component {
           <label>Languages Used:</label> 
           {this.props.countryLanguages}
         </div>
-      	<div className="country__detail country__detail--num-tweets">
-      	  <label>Number of Recent Tweets:</label> 
-          {this.props.numCountryTweets}
-      	</div>
       </div>
     );
   }

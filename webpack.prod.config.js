@@ -6,7 +6,7 @@ var webpack           = require('webpack'),
     ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 module.exports = {
-  entry: './src/js/index.js';
+  entry: './src/js/index.js',
 
   module: {
   	loaders: [
@@ -44,7 +44,6 @@ module.exports = {
   },
 
   plugins: [
-    new webpack.optimize.DedupePlugin(),
     new webpack.optimize.UglifyJsPlugin({
       minimize: true,
       compress: {

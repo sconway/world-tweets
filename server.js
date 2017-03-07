@@ -125,6 +125,8 @@ const initStream = (term, sock, coords) => {
     });
 
     stream.on('error', function(error) {
+      sock.emit("error: ", error);
+      
       throw error;
     });
 

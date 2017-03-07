@@ -83,12 +83,12 @@ export const getColor = ( score ) => {
     return 0xffff00;
   } else if ( score == 0 ) {
     return 0xffffff;
-  } else if ( score > 0 ) {
-    return 0xbfff00;
-  } else if ( score > 1 ) {
-    return 0x40ff00;
   } else if ( score > 2 ) {
     return 0x00ff00;
+  } else if ( score > 1 ) {
+    return 0x40ff00;
+  } else if ( score > 0 ) {
+    return 0xbfff00;
   }
 }
 

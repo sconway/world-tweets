@@ -1,8 +1,10 @@
 import { combineReducers } from 'redux';
-import appReducer          from './appReducer';
+import globeReducer          from './globeReducer';
+import tweetReducer          from './tweetReducer';
 
 const rootReducer = combineReducers({
-  appReducer
+  globe: globeReducer,
+  tweet: tweetReducer
 });
 
 export default rootReducer;

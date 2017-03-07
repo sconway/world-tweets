@@ -54,8 +54,6 @@ module.exports = {
     new ExtractTextPlugin('public/app.css')
   ],
 
-  // postcss: [ autoprefixer({ browsers: ['last 4 versions'] }) ],
-
   resolve: {
     extensions: [' ', '.js', '.jsx']
   },

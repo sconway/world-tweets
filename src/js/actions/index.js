@@ -4,6 +4,7 @@
 const INCREMENT_TWEETS         = 'INCREMENT_TWEETS';
 const INCREMENT_COUNTRY_TWEETS = 'INCREMENT_COUNTRY_TWEETS';
 const RESET_COUNTRY_TWEETS     = 'RESET_COUNTRY_TWEETS';
+const SET_SCENE_LOADED         = 'SET_SCENE_LOADED';
 const SET_COUNTRY_NAME         = 'SET_COUNTRY_NAME';
 const SET_COUNTRY_DATA         = 'SET_COUNTRY_DATA';
 const SET_COUNTRY_CLICKED      = 'SET_COUNTRY_CLICKED';
@@ -35,6 +36,16 @@ export const incrementCountryTweets = () => {
 export const resetCountryTweets = () => {
 	return {
 		type: RESET_COUNTRY_TWEETS
+	}
+}
+
+/**
+ * Used to set the loaded state to true
+ */
+export const setSceneLoaded = (name) => {
+	return {
+		type: SET_SCENE_LOADED,
+		name
 	}
 }
 

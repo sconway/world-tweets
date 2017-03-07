@@ -15,8 +15,7 @@ export default class TweetBox extends Component {
         boxSize   = 320;
 
     // Don't add any classes until a point is hovered on.
-    if (!this.props.isPointHovered)
-      return "";
+    if (!this.props.isPointHovered) return "";
 
     // left half 
     if (x < winWidth/2) { 

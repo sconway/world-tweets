@@ -1,0 +1,130 @@
+.intro {
+  background: #000;
+  opacity: 1;
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  transition: opacity 500ms ease-in-out;
+  width: 100%;
+  z-index: 2;
+  &.hidden {
+    opacity: 0;
+    z-index: 0;
+  }
+}
+
+// Container for the intro text.
+.intro__details {
+  box-shadow: 0px 0px 20px 3px #333;
+  color: #fff;
+  padding: 30px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: auto;
+  min-width: 320px;
+  width: 40%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  h1 {
+    font-size: 22px;
+    letter-spacing: 3px;
+    line-height: 1.6;
+    margin-top: 0;
+    text-align: center;
+    text-transform: uppercase;
+  }
+  p {
+    font-size: 12px;
+    line-height: 1.3;
+    margin-bottom: 15px;
+  }
+}
+
+.intro__color-list {
+  margin-bottom: 30px;
+  padding: 15px 0 0 40px;
+}
+
+// List item explaining which color 
+// corresponds to which tweet tone.
+.intro__color-list__color {
+  list-style: none;
+  font-size: 12px;
+  margin-bottom: 15px;
+  margin-left: 15px;
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    left: -30px;
+    top: 50%;
+    height: 15px;
+    width: 15px;
+    transform: translateY(-50%);
+    z-index: 1;
+  }
+  &.color-1 {
+    &::before {
+      background: #00ff00;
+    }
+  }
+  &.color-2 {
+    &::before {
+      background: #bfff00;
+    }
+  }
+  &.color-3 {
+    &::before {
+      background: #ffffff;
+    }
+  }
+  &.color-4 {
+    &::before {
+      background: #ff8000;
+    }
+  }
+  &.color-5 {
+    &::before {
+      background: #ff0000;
+    }
+  }
+}
+
+// Button to fade the intro out.
+.btn {
+  background: transparent;
+  border: 3px solid #fff;
+  display: block;
+  letter-spacing: 4px;
+  margin: 0 auto;
+  overflow: hidden;
+  padding: 20px 30px;
+  position: relative;
+  text-align: center;
+  text-transform: uppercase;
+  transform: perspective(1px) translateZ(0);
+  transition: all 300ms ease-in-out;
+  width: 200px;
+  &::before {
+    background: #fff;
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 100%;
+    transform: scale(0);
+    transition: all 300ms ease-in-out;
+    z-index: -1;
+  }
+  &:hover {
+    color: #000;
+    cursor: pointer;
+    &::before {
+      transform: scale(2);
+    }
+  }
+}
