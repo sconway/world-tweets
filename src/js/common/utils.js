@@ -1,5 +1,7 @@
-import d3    from 'd3';
-import THREE from 'THREE';
+import d3         from 'd3';
+import THREE      from 'THREE';
+import { scene } from './scene';
+
 
 // adapted from memoize.js by @philogb and @addyosmani
 export const memoize = (fn) => {
@@ -18,6 +20,7 @@ export const memoize = (fn) => {
     fn.memoize[key] = fn.apply(this, args);
   };
 }
+
 
 export const debounce = (func, wait, immediate) => {
   let timeout;
@@ -43,6 +46,7 @@ export const debounce = (func, wait, immediate) => {
   };
 }
 
+
 export var getTween = function (prop, to, time = 500) {
   let node     = this,
       curr     = node[prop],
@@ -56,6 +60,7 @@ export var getTween = function (prop, to, time = 500) {
   };
 };
 
+
 /*
  * Helper function that returns a random number between the two supplied
  * numbers. 
@@ -66,6 +71,20 @@ export var getTween = function (prop, to, time = 500) {
 export const rando = (min, max) => {
   return Math.floor(Math.random() * (max - min) + min);
 }
+
+
+/**
+ * Checks to see if the mouse moved during a click. Compares the mouse down
+ * location with the mouse up location to see.
+ *
+ * @param    event     : Object
+ * @param    lastPoint : THREE.Vector
+ *
+ */
+export const isStaticClick = (event, lastPoint) => {
+  return parseInt(event.distance, 10) === lastPoint;
+}
+
 
 /**
  * Returns a color code based on the sentiment score. Colors range
@@ -92,6 +111,7 @@ export const getColor = ( score ) => {
   }
 }
 
+
 /**
  * convert the positions from a lat, lon to a position on a sphere.
  *
@@ -110,3 +130,31 @@ export const latLongToVector3 = ( lat, lon, radius, height ) => {
 
   return new THREE.Vector3( x, y, z );
 }
+
+
+/**
+ * Sets the cloud material to the flag of the clicked country.
+ *
+ * @param     countryCode     :     String
+ *
+ */
+export const setCountryImage = (countryCode) => {
+  let loader = new THREE.TextureLoader();
+
+  scene.getObjectByName("cloud").material.map = loader
+    .load("src/images/flags/" + countryCode + ".png");
+
+  scene.getObjectByName("cloud").rotation.y = -Math.PI/2;
+}
+
+
+/**
+ * Set the cloud material back to the cloud image.
+ */
+export const setCountryImageBack = () => {
+  let loader = new THREE.TextureLoader();
+
+  scene.getObjectByName("cloud").material.map = loader
+    .load("src/images/clouds.png");
+}
+

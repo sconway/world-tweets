@@ -1,15 +1,15 @@
 // Require our dependencies
-var express = require('express'),
-  http      = require('http'),
-  sentiment = require('sentiment'),
-  twitter   = require('twitter'),
-  io        = require('socket.io'),
-  path      = require('path'),
-  config    = require('./config'),
-  app       = express(),
-  port      = process.env.PORT || 1243,
-  numTweets = 0,
-  term;
+var express   = require('express'),
+    http      = require('http'),
+    sentiment = require('sentiment'),
+    twitter   = require('twitter'),
+    io        = require('socket.io'),
+    path      = require('path'),
+    config    = require('./config'),
+    app       = express(),
+    port      = process.env.PORT || 1243,
+    numTweets = 0,
+    term;
 
 
 // Disable etag headers on responses

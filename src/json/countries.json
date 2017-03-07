@@ -113,7 +113,7 @@
         "east": "179.9999",
         "west": "-179.9999",
         "capital": "",
-        "areaInSqKm": "1.4E7",
+        "areaInSqKm": "1,400,000",
         "languages": ""
     },
     "Argentina": {
@@ -2479,7 +2479,7 @@
         "east": "-169.05",
         "west": "19.25",
         "capital": "Moscow",
-        "areaInSqKm": "1.71E7",
+        "areaInSqKm": "1,710,000",
         "languages": "ru,tt,xal,cau,ady,kv,ce,tyv,cv,udm,tut,mns,bua,myv,mdf,chm,ba,inh,tut,kbd,krc,ava,sah,nog"
     },
     "Rwanda": {

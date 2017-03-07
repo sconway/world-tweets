@@ -6,13 +6,13 @@ API on the back-end. The front-end uses React, Redux, THREE.js, and Socket.io.
 
 # Usage
 
-Clone this repository, then run:
+Clone this repository, update the config.js file with your twitter API keys( or use mine :) ), then run:
 
-'''sh
+```sh
 cd world-tweets
 npm install
 npm start
-'''
+```
 
 Navigate to http://localhost:1243
 

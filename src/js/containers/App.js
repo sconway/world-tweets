@@ -4,11 +4,12 @@ import { bindActionCreators }                       from 'redux';
 import { connect }                                  from 'react-redux';
 import * as Actions                                 from '../actions';
 
-import { scene, camera, renderer}                   from '../common/scene';
+import { scene, camera, renderer }                  from '../common/scene';
 import { setEvents }                                from '../common/setEvents';
 import { convertToXYZ, getEventCenter, geodecoder } from '../common/geoHelpers';
 import { mapTexture }                               from '../common/mapTexture';
-import { getTween, memoize, getColor }              from '../common/utils';
+import { getTween, memoize, getColor, isStaticClick,
+         setCountryImage, setCountryImageBack  }    from '../common/utils';
 import { fadeObject, growObject }                   from '../utils/tweens';
 import { createEarth }                              from '../utils/createEarth';
 import { createPoint }                              from '../utils/createPoint';
@@ -135,20 +136,16 @@ class App extends Component {
 	 * Used to load in the data that generates the main map/globe.
 	 */
 	loadMap() {
-
-    this.root.scale.set(0.1, 0.1, 0.1);
-
     let self  = this,
         globe = createEarth(this.sphere);
 
 	  d3.json('src/json/world.json', (err, data) => {
 
       // Setup cache for country textures
-      this.countries = topojson.feature(data, data.objects.countries);
-      this.geo       = geodecoder(this.countries.features);
-      this.earth     = globe.earth;
-      this.cloud     = globe.cloud;
-
+      this.countries    = topojson.feature(data, data.objects.countries);
+      this.geo          = geodecoder(this.countries.features);
+      this.earth        = globe.earth;
+      this.cloud        = globe.cloud;
       this.textureCache = memoize((cntryID, color) => {
         let country = this.geo.find(cntryID);
         return mapTexture(country, color);
@@ -174,6 +171,7 @@ class App extends Component {
 	    let baseMapBack  = new THREE.Mesh(self.sphere, mapMaterialBack),
 	        baseMapFront = new THREE.Mesh(self.sphere, mapMaterialFront);
 
+      // Add the event listeners and name 
       baseMapFront.addEventListener('mousedown', self.onGlobeMouseDown, false);
       baseMapFront.addEventListener('mouseup',   self.onGlobeClick,     false);
       baseMapFront.addEventListener('mousemove', self.onGlobeMousemove, false);
@@ -184,19 +182,21 @@ class App extends Component {
       // set the earth image to be above the colored globe
       this.earth.renderOrder = 1;
 
-      this.root.rotation.y = Math.PI;
-
-	    // make sure the back is added to the root/scene first
+      // make sure the back is added to the root/scene first
       this.root.add(this.earth);
       this.root.add(this.cloud);
-	    this.root.add(baseMapBack);
-	    this.root.add(baseMapFront);
-
+      this.root.add(baseMapBack);
+      this.root.add(baseMapFront);
+      this.root.scale.set(0.1, 0.1, 0.1);
+      this.root.rotation.y = Math.PI;
 	    scene.add(this.root);
 
+      // Add controls for the scene.
 	    this.controls = new this.OrbitControls(camera, renderer.domElement);
+      this.controls.minDistance = 500;
+      this.controls.maxDistance = 1000;
 
-      // Setup the event listeners for the events on the globe.
+      // Registers the event listeners for the events on the globe.
       setEvents(camera, [baseMapFront], 'mousedown', null);
 	    setEvents(camera, [baseMapFront], 'mouseup',   null);
       setEvents(camera, [baseMapFront], 'mousemove', 10, null, null,
@@ -242,39 +242,8 @@ class App extends Component {
         };
 
     // Show the selected country's flag
-    this.setCountryImage(countryInfo["countryCode"].toLowerCase());
-    
-    // // Let the server know a country was clicked.
-    // this.socket.emit("countryChange", countryInfo );
-
+    setCountryImage(countryInfo["countryCode"].toLowerCase());
     this.props.actions.setCountryData(countryData);
-  }
-
-
-  /**
-   * Sets the cloud material to the flag of the clicked country.
-   *
-   * @param     countryCode     :     String
-   *
-   */
-  setCountryImage(countryCode) {
-    let loader = new THREE.TextureLoader();
-
-    scene.getObjectByName("cloud").material.map = loader
-      .load("src/images/flags/" + countryCode + ".png");
-
-    scene.getObjectByName("cloud").rotation.y = -Math.PI/2;
-  }
-
-
-  /**
-   * Set the cloud material back to the cloud image.
-   */
-  setCountryImageBack() {
-    let loader = new THREE.TextureLoader();
-
-    scene.getObjectByName("cloud").material.map = loader
-      .load("src/images/clouds.png");
   }
 
 
@@ -313,7 +282,6 @@ class App extends Component {
    */
   onPointHoverOff() {
     this.props.actions.setPointHovered(false);
-
     this.toggleGlobeVisibility(0, 0.99, 200);
   }
 
@@ -348,9 +316,7 @@ class App extends Component {
    */
   onCountryHover(country) {
     document.body.style.cursor = "pointer";
-
     this.props.actions.setCountryName(country)
-
     this.toggleGlobeVisibility(1, 0.6, 0.4);
   }
 
@@ -380,11 +346,7 @@ class App extends Component {
     document.getElementById("wrapper").classList = "";
 
     // Set the cloud image back.
-    this.setCountryImageBack();
-
-    // Let the server know a country was clicked.
-    // this.socket.emit("countryChangeBack");
-
+    setCountryImageBack();
     this.props.actions.setCountryClicked(false);
     this.props.actions.setCountryName("");
     this.props.actions.resetCountryTweets();
@@ -427,18 +389,6 @@ class App extends Component {
   }
 
 
-  /**
-   * Checks to see if the mouse moved during a click. Compares the mouse down
-   * location with the mouse up location to see.
-   *
-   * @param    event    :    Object
-   *
-   */
-  isStaticClick(event) {
-    return parseInt(event.distance, 10) === this.lastPoint;
-  }
-
-
 	/**
 	 * Called when the globe is clicked on. Rotates the camera to face the
 	 * globe and moves its position.
@@ -447,7 +397,7 @@ class App extends Component {
 	  // Get point, convert to latitude/longitude
 	  let latlng   = getEventCenter.call(this.sphere, event),
         country  = this.geo.search(latlng[0], latlng[1]),
-        isStatic = this.isStaticClick(event);
+        isStatic = isStaticClick(event, this.lastPoint);
 
     // Don't do anything when a country or point is in view, or if a drag occurred.
     if (!this.props.isCountryClicked && !this.props.isPointHovered && isStatic) {
