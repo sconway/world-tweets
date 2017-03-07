@@ -28,7 +28,7 @@ var server = http.createServer(app).listen(port, function() {
 // Index Route
 app.get('/', function(req, res) {
 
-  // Set /public as our static content dir
+  // Set / as our static content dir
   app.use("/", express.static(__dirname + "/"));
 
   res.sendFile(path.join(__dirname, 'index.html'));
@@ -126,7 +126,7 @@ const initStream = (term, sock, coords) => {
 
     stream.on('error', function(error) {
       sock.emit("error: ", error);
-      
+
       throw error;
     });
 
