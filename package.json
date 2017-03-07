@@ -1,7 +1,7 @@
 {
-  "name": "weather-visualizer",
-  "version": "1.0.0",
-  "description": "Interactive WebGL weather-visualizer",
+  "name": "World Tweets",
+  "version": "2.0.0",
+  "description": "Interactive WebGL Tweet and Globe Visualizer",
   "main": "index.js",
   "dependencies": {
     "babel-loader": "^6.3.1",
@@ -9,10 +9,12 @@
     "babel-preset-react": "^6.23.0",
     "babel-preset-stage-2": "^6.22.0",
     "d3": "^3.5.5",
+    "express": "^4.15.2",
     "react": "^15.4.2",
     "react-dom": "^15.4.2",
     "react-redux": "^5.0.3",
     "redux": "^3.6.0",
+    "socket.io": "^1.5.1",
     "shaderfrog-runtime": "0.0.15",
     "three": "^0.78.0",
     "three-obj": "^0.6.5",
@@ -30,7 +32,6 @@
     "babel-preset-react-hmre": "^1.1.1",
     "css-loader": "^0.26.1",
     "es6-module-loader": "^0.16.6",
-    "express": "^4.15.2",
     "extract-text-webpack-plugin": "^2.1.0",
     "file-loader": "^0.10.0",
     "http": "0.0.0",
@@ -71,7 +72,7 @@
   "author": "Scott Conway",
   "license": "MIT",
   "bugs": {
-    "url": ""
+    "url": "https://github.com/sconway/world-tweets"
   },
-  "homepage": ""
+  "homepage": "https://world-tweets.herokuapp.com/"
 }
