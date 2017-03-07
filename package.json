@@ -1,5 +1,5 @@
 {
-  "name": "World Tweets",
+  "name": "World-Tweet-Global-Visualization",
   "version": "2.0.0",
   "description": "Interactive WebGL Tweet and Globe Visualizer",
   "main": "index.js",
