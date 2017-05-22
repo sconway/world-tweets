@@ -5,8 +5,6 @@ var webpack           = require('webpack'),
 
 module.exports = {
   entry: [
-    'webpack-dev-server/client?http://localhost:1243',
-    'webpack/hot/only-dev-server',
     './src/js/index.js'
   ],
 
@@ -18,7 +16,7 @@ module.exports = {
     		test: /\.js$/,
     		exclude: /node_modules/,
         include: path.join(__dirname, 'src'),
-    		loaders: ['react-hot-loader', 'babel-loader']
+    		loaders: ['babel-loader']
     	},
     	{
         test: /\.css$/,
@@ -49,7 +47,6 @@ module.exports = {
 
   plugins: [
     new webpack.optimize.OccurrenceOrderPlugin(),
-    new webpack.HotModuleReplacementPlugin(),
     new webpack.NoEmitOnErrorsPlugin(),
     new ExtractTextPlugin('public/app.css')
   ],

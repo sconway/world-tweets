@@ -4,6 +4,7 @@
 		<meta charset="UTF-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 		<meta name="viewport" content="width=device-width,initial-scale=1">
+		<meta name="theme-color" content="#db5945">
 		<title>3D Twitter Visualizer</title>
 		<meta name="author" content="Scott Conway">
 		<meta name="description" content="description here">
@@ -14,33 +15,6 @@
 		<link rel="stylesheet" type="text/css" href="public/app.css">
 	</head>
 	<body class="body">
-
-		<!------------------ Custom Shader Code -------------------------->
-		<script id="vertexShader" type="x-shader/x-vertex">
-				uniform vec3 viewVector;
-				uniform float c;
-				uniform float p;
-				varying float intensity;
-				void main() 
-				{
-						vec3 vNormal = normalize( normalMatrix * normal );
-						vec3 vNormel = normalize( normalMatrix * viewVector );
-						intensity = pow( c - dot(vNormal, vNormel), p );
-						
-						gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-				}
-		</script>
-
-		<!-- fragment shader a.k.a. pixel shader -->
-		<script id="fragmentShader" type="x-shader/x-vertex"> 
-				uniform vec3 glowColor;
-				varying float intensity;
-				void main() 
-				{
-						vec3 glow = glowColor * intensity;
-						gl_FragColor = vec4( glow, 0.6 );
-				}
-		</script>
 
 		<div id="wrapper">
 			<!-- Root for the React portion -->

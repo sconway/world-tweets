@@ -36,37 +36,42 @@ class App extends Component {
     this.OrbitControls    = require('three-orbit-controls')(THREE);
     this.io               = require('socket.io-client');
     this.TWEEN            = require('tween.js');
-    this.geo              = null;
+    this.clock            = new THREE.Clock();
+    this.cloud            = null;
     this.controls         = null;
     this.countries        = null;
-    this.overlay          = null;
-    this.textureCache     = null;
-    this.earth            = null;
-    this.cloud            = null;
-    this.timer            = null;
-    this.socket           = null;
-    this.globeMutex       = true;
     this.countryData      = null;
-    this.segments         = 200; // number of vertices. Higher = better mouse accuracy
+    this.earth            = null;
+    this.geo              = null;
+    this.globeMutex       = true;
+    this.isMouseDown      = false;
+    this.lastPoint        = {};
+    this.mouseCoordinates = {x: 0, y: 0};  
+    this.overlay          = null;
+    this.points           = new THREE.Object3D();
     this.RADIUS           = 400;
     this.root             = new THREE.Object3D();
-    this.points           = new THREE.Object3D();
-    this.clock            = new THREE.Clock();
+    this.segments         = 200; // number of vertices. Higher = better mouse accuracy
     this.sphere           = new THREE.SphereGeometry(this.RADIUS, this.segments, this.segments);
-    this.mouseCoordinates = {x: 0, y: 0};  
-    this.lastPoint        = {};
+    this.socket           = null;
+    this.textureCache     = null;
+    this.timer            = null;
     this.animate          = this.animate.bind(this);
     this.initFeed         = this.initFeed.bind(this);
-    this.onGlobeClick     = this.onGlobeClick.bind(this);
     this.onGlobeMouseDown = this.onGlobeMouseDown.bind(this);
     this.onGlobeMousemove = this.onGlobeMousemove.bind(this);
+    this.onGlobeMouseUp   = this.onGlobeMouseUp.bind(this);
+    this.onMouseDown      = this.onMouseDown.bind(this);
+    this.onMouseUp        = this.onMouseUp.bind(this);
   }
 
 
-	/**
+	/**s
 	 * Initializer function to set up our scene and all elements within it.
 	 */
 	init() {
+    document.addEventListener('mousedown', this.onMouseDown, false);
+    document.addEventListener('mouseup', this.onMouseUp, false);
 	  this.animate();
 	  this.loadMap();
 	}
@@ -152,13 +157,16 @@ class App extends Component {
       });
 
 	    let worldTexture     = mapTexture(this.countries, '#transparent', 'transparent'),
-	        worldTextureBack = mapTexture(this.countries, '#000',         'transparent');
+	        worldTextureBack = mapTexture(this.countries, '#111111', 'transparent');
 
 	    let mapMaterialBack  = new THREE.MeshPhongMaterial({
 	      depthWrite:  false,
+        color:       0x111111,
+        emissive:    0x3c2711,
+        shininess:   50,
 	      map:         worldTextureBack,
 	      side:        THREE.BackSide,
-	      transparent: true,
+	      transparent: true
 	    });
 
 	    let mapMaterialFront = new THREE.MeshPhongMaterial({
@@ -173,7 +181,7 @@ class App extends Component {
 
       // Add the event listeners and name 
       baseMapFront.addEventListener('mousedown', self.onGlobeMouseDown, false);
-      baseMapFront.addEventListener('mouseup',   self.onGlobeClick,     false);
+      baseMapFront.addEventListener('mouseup',   self.onGlobeMouseUp,     false);
       baseMapFront.addEventListener('mousemove', self.onGlobeMousemove, false);
 	    baseMapFront.receiveShadow = true;
       baseMapFront.name = "front-map";
@@ -181,10 +189,11 @@ class App extends Component {
 
       // set the earth image to be above the colored globe
       this.earth.renderOrder = 1;
+      this.cloud.renderOrder = 2;
 
       // make sure the back is added to the root/scene first
-      this.root.add(this.earth);
       this.root.add(this.cloud);
+      this.root.add(this.earth);
       this.root.add(baseMapBack);
       this.root.add(baseMapFront);
       this.root.scale.set(0.1, 0.1, 0.1);
@@ -199,7 +208,7 @@ class App extends Component {
       // Registers the event listeners for the events on the globe.
       setEvents(camera, [baseMapFront], 'mousedown', null);
 	    setEvents(camera, [baseMapFront], 'mouseup',   null);
-      setEvents(camera, [baseMapFront], 'mousemove', 10, null, null,
+      setEvents(camera, [baseMapFront], 'mousemove', 5, null, null,
         self.onCountryHoverOff.bind(self));
 	    setEvents(camera, this.points.children, 'mousemove', 5, this.TWEEN,
         self.onPointHover.bind(self), self.onPointHoverOff.bind(self));
@@ -266,8 +275,8 @@ class App extends Component {
 
     this.mouseCoordinates = mouse;
 
-    // Don't show the tweets when we're in the country view mode.
-    if (!this.props.isCountryClicked) {
+    // Don't show the tweets when we're in the country view mode, or dragging.
+    if (!this.props.isCountryClicked && !this.isMouseDown) {
       this.props.actions.setPointHovered(true);
       this.props.actions.setPointTweetData(data);
       this.toggleGlobeVisibility(0, 0.6, 0.4);
@@ -282,7 +291,7 @@ class App extends Component {
    */
   onPointHoverOff() {
     this.props.actions.setPointHovered(false);
-    this.toggleGlobeVisibility(0, 0.99, 200);
+    this.toggleGlobeVisibility(0, 0.99, 1);
   }
 
 
@@ -331,7 +340,7 @@ class App extends Component {
       this.props.actions.setCountryName("");
 
       if (!this.props.isPointHovered)
-        this.toggleGlobeVisibility(0, 0.99, 200);
+        this.toggleGlobeVisibility(0, 0.99, 1);
     }
   }
 
@@ -347,6 +356,10 @@ class App extends Component {
 
     // Set the cloud image back.
     setCountryImageBack();
+    
+    // reset globe to default state.
+    this.onCountryHoverOff();
+
     this.props.actions.setCountryClicked(false);
     this.props.actions.setCountryName("");
     this.props.actions.resetCountryTweets();
@@ -369,12 +382,29 @@ class App extends Component {
 
       if (this.overlay) this.overlay.material.opacity = materialOpacity;
 
-      fadeObject(this.TWEEN, scene.getObjectByName('earth'),    earthOpacity, 200);
-      fadeObject(this.TWEEN, scene.getObjectByName('back-map'), mapOpacity,   200);
-
+      scene.getObjectByName('earth').material.opacity = earthOpacity;      
+      scene.getObjectByName('back-map').material.opacity = mapOpacity;      
     }
     
   }  
+
+
+  /**
+   * Called anytime the mouse is pressed down. Sets the flag
+   * used to determine if dragging is occurring.
+   */
+  onMouseDown() {
+    this.isMouseDown = true;
+  }
+
+
+  /**
+   * Called anytime the mouse is pressed up. Sets the flag
+   * used to determine if dragging is occurring.
+   */
+  onMouseUp() {
+    this.isMouseDown = false;
+  }
 
 
   /**
@@ -385,6 +415,7 @@ class App extends Component {
    *
    */
   onGlobeMouseDown(event) {
+    this.isMouseDown = true;
     this.lastPoint = parseInt(event.distance, 10);
   }
 
@@ -393,14 +424,17 @@ class App extends Component {
 	 * Called when the globe is clicked on. Rotates the camera to face the
 	 * globe and moves its position.
 	 */
-	onGlobeClick(event) {
+	onGlobeMouseUp(event) {
 	  // Get point, convert to latitude/longitude
 	  let latlng   = getEventCenter.call(this.sphere, event),
         country  = this.geo.search(latlng[0], latlng[1]),
         isStatic = isStaticClick(event, this.lastPoint);
 
+    this.isMouseDown = false;
+
     // Don't do anything when a country or point is in view, or if a drag occurred.
     if (!this.props.isCountryClicked && !this.props.isPointHovered && isStatic) {
+
       // Make sure a country is clicked on
       if (country)
         this.onCountryClick(country.code);
@@ -448,7 +482,7 @@ class App extends Component {
 	      country = this.geo.search(latlng[0], latlng[1]);
 
     // Make sure a country, is hovered on and we are not in the country view.
-	  if (country && !this.props.isCountryClicked && !this.props.isPointHovered) {
+	  if (country && !this.props.isCountryClicked && !this.props.isPointHovered && !this.isMouseDown)  {
 
       // Only run this if we have the mutex or we moved to a different country.
       if (country.code !== this.props.countryName || this.globeMutex) {
@@ -467,7 +501,7 @@ class App extends Component {
         // Only add the overlay if it's not there already. Duh..
         if (!this.overlay) {
           this.overlay = new THREE.Mesh(this.sphere, material);
-          this.overlay.renderOrder = 2;
+          this.overlay.renderOrder = 3;
           this.overlay.name = "overlay";
           this.root.add(this.overlay);
         } else {

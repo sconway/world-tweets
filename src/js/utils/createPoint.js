@@ -22,16 +22,11 @@ export var pointList = [];
  */
 export const createPoint = (lat, long, radius, size, height, color, points, tween) => {
   let geometry = new THREE.CylinderGeometry( size, 0, size * 4, 8, 1 ),
-  // let geometry = new THREE.SphereGeometry(size, 8, 8),
-      // material = new THREE.MeshPhongMaterial({ 
-      //   color:   color,
-      //   shading: THREE.SmoothShading,
-      //   shininess: 30,
-      //   specular: 0x0000ff,
-      //   wireframe: true
-      //   // transparent: true
-      // }),
-      material = createGlowMaterial(color),
+      material = new THREE.MeshPhongMaterial({ 
+        color:   color,
+        shading: THREE.SmoothShading,
+        shininess: 10,
+      }),
       mesh     = new THREE.Mesh(geometry, material),
       vector   = latLongToVector3(lat, long, radius, height);
 
