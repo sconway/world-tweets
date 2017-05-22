@@ -26,7 +26,7 @@ camera.position.z = 1000;
 
 export var scene = new THREE.Scene();
 
-export var light = new THREE.HemisphereLight('#ffffff', '#ffffff', 1);
+export var light = new THREE.HemisphereLight('#aaaaaa', '#ffffff', 2);
 // light.position.set(0, 1000, 0);
 scene.add(light);
 

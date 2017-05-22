@@ -44,6 +44,7 @@ class App extends Component {
     this.earth            = null;
     this.geo              = null;
     this.globeMutex       = true;
+    this.isCountryClicked = false;
     this.isMouseDown      = false;
     this.lastPoint        = {};
     this.mouseCoordinates = {x: 0, y: 0};  
@@ -91,7 +92,7 @@ class App extends Component {
       // when a new tweet comes in, add it to our array
       this.socket.on("tweet", (data) => {
 
-        if (!self.props.isCountryClicked) {
+        if (!self.isCountryClicked) {
           tweets.push(data);
         } else {
           self.props.actions.incrementCountryTweets()
@@ -115,7 +116,7 @@ class App extends Component {
    */
   addTweet() {
     // Make sure we have some tweets to work with, and a country isn't in view.
-    if (tweets[this.props.numTweets] && !this.props.isCountryClicked) {
+    if (tweets[this.props.numTweets] && !this.isCountryClicked) {
       let tweet       = tweets[this.props.numTweets],
           tweetId     = tweet['twid'],
           text        = tweet['body'],
@@ -276,7 +277,7 @@ class App extends Component {
     this.mouseCoordinates = mouse;
 
     // Don't show the tweets when we're in the country view mode, or dragging.
-    if (!this.props.isCountryClicked && !this.isMouseDown) {
+    if (!this.isCountryClicked && !this.isMouseDown) {
       this.props.actions.setPointHovered(true);
       this.props.actions.setPointTweetData(data);
       this.toggleGlobeVisibility(0, 0.6, 0.4);
@@ -309,8 +310,9 @@ class App extends Component {
     document.getElementById("wrapper").classList = "active";
     document.body.style.cursor                   = "auto";
 
+    this.isCountryClicked = true;
+
     this.props.actions.setPointHovered(false);
-    this.props.actions.setCountryClicked(true);
     this.props.actions.setCountryName(country);
     this.setCountryData(country);
   }
@@ -331,10 +333,12 @@ class App extends Component {
 
 
   /**
-   * Handles hovering off a country. Sets the materials back.
+   * Handles hovering off a country. Sets the materials, cursor, and
+   * country back to the default values.
    */
   onCountryHoverOff() {
-    if (!this.props.isCountryClicked) {
+
+    if (!this.isCountryClicked) {
       document.body.style.cursor = "auto";
 
       this.props.actions.setCountryName("");
@@ -342,6 +346,7 @@ class App extends Component {
       if (!this.props.isPointHovered)
         this.toggleGlobeVisibility(0, 0.99, 1);
     }
+    
   }
 
 
@@ -354,15 +359,15 @@ class App extends Component {
 
     document.getElementById("wrapper").classList = "";
 
-    // Set the cloud image back.
     setCountryImageBack();
-    
-    // reset globe to default state.
-    this.onCountryHoverOff();
 
-    this.props.actions.setCountryClicked(false);
+    this.isCountryClicked = false;
+
     this.props.actions.setCountryName("");
     this.props.actions.resetCountryTweets();
+
+    // reset globe visibility to default state.
+    this.onCountryHoverOff();
   }
 
 
@@ -373,13 +378,13 @@ class App extends Component {
    * @param      materialOpacity     :     number
    * @param      earthOpacity        :     number
    * @param      mapOpacity          :     number
-   *
    */
   toggleGlobeVisibility(materialOpacity, earthOpacity, mapOpacity) {
 
-    if (scene.getObjectByName('earth').material.opacity !== earthOpacity &&
-        !this.props.isCountryClicked) {
+    if ((scene.getObjectByName('earth').material.opacity !== earthOpacity) &&
+        !this.isCountryClicked) {
 
+      // Make sure an overlay has been defined before we set its opacity.      
       if (this.overlay) this.overlay.material.opacity = materialOpacity;
 
       scene.getObjectByName('earth').material.opacity = earthOpacity;      
@@ -433,7 +438,7 @@ class App extends Component {
     this.isMouseDown = false;
 
     // Don't do anything when a country or point is in view, or if a drag occurred.
-    if (!this.props.isCountryClicked && !this.props.isPointHovered && isStatic) {
+    if (!this.isCountryClicked && !this.props.isPointHovered && isStatic) {
 
       // Make sure a country is clicked on
       if (country)
@@ -482,7 +487,7 @@ class App extends Component {
 	      country = this.geo.search(latlng[0], latlng[1]);
 
     // Make sure a country, is hovered on and we are not in the country view.
-	  if (country && !this.props.isCountryClicked && !this.props.isPointHovered && !this.isMouseDown)  {
+	  if (country && !this.isCountryClicked && !this.props.isPointHovered && !this.isMouseDown)  {
 
       // Only run this if we have the mutex or we moved to a different country.
       if (country.code !== this.props.countryName || this.globeMutex) {
@@ -547,7 +552,7 @@ class App extends Component {
     if (this.cloud && !this.props.isPointHovered) 
       this.cloud.rotation.y += 0.000625;
 
-    if (this.root && !this.props.isPointHovered && !this.props.isCountryClicked)
+    if (this.root && !this.props.isPointHovered && !this.isCountryClicked)
       this.root.rotation.y += 0.0005;
 
     // update and transitions on existing tweens
@@ -573,7 +578,7 @@ class App extends Component {
           isLoaded   ={this.props.isLoaded}
           handleClick={this.onReady.bind(this)} />
         <BackButton 
-          isCountryClicked={this.props.isCountryClicked} 
+          isCountryClicked={this.isCountryClicked} 
           onButtonClick   ={this.onBackButtonClick.bind(this)} />
         <CountryName  
           countryName={this.props.countryName} />

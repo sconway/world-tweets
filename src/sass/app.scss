@@ -318,6 +318,7 @@ body {
   .tweet-box--user-name,
   .tweet-box--tweet-text {
     opacity: 0;
+    overflow: hidden;
   }
 }
 

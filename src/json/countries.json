@@ -107,14 +107,14 @@
         "countryCode": "AQ",
         "countryName": "Antarctica",
         "currencyCode": "",
-        "population": "0",
+        "population": "lol, not many",
         "north": "-60.515533",
         "south": "-89.9999",
         "east": "179.9999",
         "west": "-179.9999",
-        "capital": "",
-        "areaInSqKm": "1,400,000",
-        "languages": ""
+        "capital": "South Pole",
+        "areaInSqKm": "1400000.0",
+        "languages": "Penguin, Polar Bear"
     },
     "Argentina": {
         "countryCode": "AR",
@@ -2479,7 +2479,7 @@
         "east": "-169.05",
         "west": "19.25",
         "capital": "Moscow",
-        "areaInSqKm": "1,710,000",
+        "areaInSqKm": "1710000.0",
         "languages": "ru,tt,xal,cau,ady,kv,ce,tyv,cv,udm,tut,mns,bua,myv,mdf,chm,ba,inh,tut,kbd,krc,ava,sah,nog"
     },
     "Rwanda": {
