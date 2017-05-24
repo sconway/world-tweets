@@ -61038,7 +61038,7 @@ var App = function (_Component) {
 
       // Set the styles back to the default state.
       document.getElementById("wrapper").classList = "active";
-      document.body.style.cursor = "auto";
+      document.body.classList.remove("pointer");
 
       this.isCountryClicked = true;
 
@@ -61058,7 +61058,7 @@ var App = function (_Component) {
   }, {
     key: 'onCountryHover',
     value: function onCountryHover(country) {
-      document.body.style.cursor = "pointer";
+      document.body.classList.add("pointer");
       this.props.actions.setCountryName(country);
       this.toggleGlobeVisibility(1, 0.6, 0.4);
     }
@@ -61073,7 +61073,7 @@ var App = function (_Component) {
     value: function onCountryHoverOff() {
 
       if (!this.isCountryClicked) {
-        document.body.style.cursor = "auto";
+        document.body.classList.remove("pointer");
 
         this.props.actions.setCountryName("");
 

@@ -308,7 +308,7 @@ class App extends Component {
 
     // Set the styles back to the default state.
     document.getElementById("wrapper").classList = "active";
-    document.body.style.cursor                   = "auto";
+    document.body.classList.remove("pointer");
 
     this.isCountryClicked = true;
 
@@ -326,7 +326,7 @@ class App extends Component {
    *
    */
   onCountryHover(country) {
-    document.body.style.cursor = "pointer";
+    document.body.classList.add("pointer");
     this.props.actions.setCountryName(country)
     this.toggleGlobeVisibility(1, 0.6, 0.4);
   }
@@ -339,7 +339,7 @@ class App extends Component {
   onCountryHoverOff() {
 
     if (!this.isCountryClicked) {
-      document.body.style.cursor = "auto";
+      document.body.classList.remove("pointer");
 
       this.props.actions.setCountryName("");
 
