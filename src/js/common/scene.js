@@ -2,6 +2,8 @@ import THREE from 'THREE';
 import d3 from 'd3';
 import Detector from '../utils/detector.js';
 
+var FOUR = require("three-canvas-renderer");
+
 
 export var canvas = d3.select("#three-container").append("canvas")
   .attr("width", window.innerWidth)
@@ -15,7 +17,7 @@ export var renderer = Detector.webgl ?
     antialias: true,
     canvas: canvas.node()
   }) : 
-  new THREE.CanvasRenderer();
+  new FOUR.CanvasRenderer();
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor( 0x666666, 0 );
