@@ -307,7 +307,7 @@ class App extends Component {
     this.root.remove(this.points);
 
     // Set the styles back to the default state.
-    document.getElementById("wrapper").classList = "active";
+    document.getElementById("wrapper").classList.add("active");
     document.body.classList.remove("pointer");
 
     this.isCountryClicked = true;
@@ -357,7 +357,7 @@ class App extends Component {
   onBackButtonClick() {
     this.root.add(this.points);
 
-    document.getElementById("wrapper").classList = "";
+    document.getElementById("wrapper").classList.remove("active");
 
     setCountryImageBack();
 

@@ -1,8 +1,7 @@
+// I know it's messy....
 import THREE from 'THREE';
 import d3 from 'd3';
 import Detector from '../utils/detector.js';
-
-var FOUR = require("three-canvas-renderer");
 
 
 export var canvas = d3.select("#three-container").append("canvas")
@@ -11,13 +10,16 @@ export var canvas = d3.select("#three-container").append("canvas")
 
 canvas.node().getContext("webgl");
 
-export var renderer = Detector.webgl ? 
-  new THREE.WebGLRenderer({
+if (!window.WebGLRenderingContext) {
+    // the browser doesn't even know what WebGL is
+    window.location = "http://get.webgl.org";
+}
+
+export var renderer = new THREE.WebGLRenderer({
     alpha: true,
     antialias: true,
     canvas: canvas.node()
-  }) : 
-  new FOUR.CanvasRenderer();
+  });
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor( 0x666666, 0 );
