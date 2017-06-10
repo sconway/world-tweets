@@ -4,16 +4,16 @@ import d3 from 'd3';
 import Detector from '../utils/detector.js';
 
 
+if (!window.WebGLRenderingContext || !Detector.webgl) {
+    // the browser doesn't even know what WebGL is
+    window.location = "http://get.webgl.org";
+}
+
 export var canvas = d3.select("#three-container").append("canvas")
   .attr("width", window.innerWidth)
   .attr("height", window.innerHeight);
 
 canvas.node().getContext("webgl");
-
-if (!window.WebGLRenderingContext) {
-    // the browser doesn't even know what WebGL is
-    window.location = "http://get.webgl.org";
-}
 
 export var renderer = new THREE.WebGLRenderer({
     alpha: true,

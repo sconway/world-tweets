@@ -45429,15 +45429,13 @@ var _detector2 = _interopRequireDefault(_detector);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var canvas = exports.canvas = _d2.default.select("#three-container").append("canvas").attr("width", window.innerWidth).attr("height", window.innerHeight); // I know it's messy....
-
-
-canvas.node().getContext("webgl");
-
-if (!window.WebGLRenderingContext) {
+if (!window.WebGLRenderingContext || !_detector2.default.webgl) {
   // the browser doesn't even know what WebGL is
   window.location = "http://get.webgl.org";
-}
+} // I know it's messy....
+var canvas = exports.canvas = _d2.default.select("#three-container").append("canvas").attr("width", window.innerWidth).attr("height", window.innerHeight);
+
+canvas.node().getContext("webgl");
 
 var renderer = exports.renderer = new _THREE2.default.WebGLRenderer({
   alpha: true,
